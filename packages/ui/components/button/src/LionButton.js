@@ -128,8 +128,6 @@ export class LionButton extends DisabledWithTabIndexMixin(LitElement) {
     super();
     this.type = 'button';
     this.active = false;
-    /** @private */
-    this.__keyboardClickStarted = false;
 
     this.__setupEvents();
   }
@@ -196,17 +194,12 @@ export class LionButton extends DisabledWithTabIndexMixin(LitElement) {
     }
 
     this.active = true;
-    this.__keyboardClickStarted = true;
     /**
      * @param {KeyboardEvent} keyupEvent
      */
     const keyupHandler = keyupEvent => {
       if (isKeyboardClickEvent(keyupEvent)) {
         this.active = false;
-        // A keyup that lands elsewhere (focus moved away in between) ends it without a click
-        if (!keyupEvent.composedPath().includes(this)) {
-          this.__keyboardClickStarted = false;
-        }
         document.removeEventListener('keyup', keyupHandler, true);
       }
     };
@@ -223,13 +216,6 @@ export class LionButton extends DisabledWithTabIndexMixin(LitElement) {
       if (event.target && event.target !== this) {
         return;
       }
-      // Only a keyup whose keydown was on this button is a click. Without this, Enter in a form
-      // inside a dialog clicked the invoker again: closing the dialog moves the focus back to the
-      // invoker before the keyup (#2555)
-      if (!this.__keyboardClickStarted) {
-        return;
-      }
-      this.__keyboardClickStarted = false;
       // dispatch click
       this.click();
     }
